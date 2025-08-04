@@ -1,0 +1,39 @@
+name: map_link
+description: "Smart navigation and route planning Flutter app using open maps."
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: ^3.7.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_map: ^8.2.1
+  latlong2: ^0.9.1
+  geolocator: ^14.0.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  rename: ^3.1.0
+  flutter_launcher_icons: ^0.14.4
+
+flutter:
+  uses-material-design: true
+
+flutter_launcher_icons:
+  android: "map_link"
+  ios: true
+  image_path: "assets/logo_icon/map_link.png"
+  min_sdk_android: 21 # android min sdk min:16, default 21
+  web:
+    generate: true
+    image_path: "assets/logo_icon/map_link.png"
+  windows:
+    generate: true
+    image_path: "assets/logo_icon/map_link.png"
+  macos:
+    generate: true
+    image_path: "assets/logo_icon/map_link.png"
