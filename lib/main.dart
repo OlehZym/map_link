@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -30,16 +31,18 @@ class MyHomePageState extends State<MyHomePage> {
   double zoom = 15.0;
   bool isLoading = true;
 
+  StreamSubscription<Position>? _positionStream;
+
   String mapUrl =
       'https://api.maptiler.com/maps/streets/{z}/{x}/{y}.png?key=JHC4LkWdMJFtt48jFpmC';
 
   @override
   void initState() {
     super.initState();
-    _moveToInitialLocation();
+    _startTrackingLocation();
   }
 
-  Future<void> _moveToInitialLocation() async {
+  void _startTrackingLocation() async {
     try {
       LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied ||
@@ -52,21 +55,34 @@ class MyHomePageState extends State<MyHomePage> {
         }
       }
 
-      final position = await Geolocator.getCurrentPosition();
-      final latLng = LatLng(position.latitude, position.longitude);
-      setState(() {
-        _currentPosition = latLng;
-        isLoading = false;
-      });
+      // Настройки отслеживания
+      const locationSettings = LocationSettings(
+        accuracy: LocationAccuracy.bestForNavigation,
+        distanceFilter: 1, // обновлять при сдвиге на 5 метров
+      );
 
-      // 🛠 Ждём кадр UI, а потом двигаем карту
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _mapController.move(latLng, zoom);
+      _positionStream = Geolocator.getPositionStream(
+        locationSettings: locationSettings,
+      ).listen((Position position) {
+        final latLng = LatLng(position.latitude, position.longitude);
+        setState(() {
+          _currentPosition = latLng;
+          isLoading = false;
+        });
+
+        // Чтобы карта всегда следила за позицией
+        //_mapController.move(latLng, zoom);
       });
     } catch (e) {
       setState(() => isLoading = false);
       debugPrint('Error getting location: $e');
     }
+  }
+
+  @override
+  void dispose() {
+    _positionStream?.cancel();
+    super.dispose();
   }
 
   void openAddWarningWindow(BuildContext context) {
@@ -352,15 +368,8 @@ class MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> _goToMyLocation() async {
-    try {
-      final position = await Geolocator.getCurrentPosition();
-      final latLng = LatLng(position.latitude, position.longitude);
-      setState(() {
-        _currentPosition = latLng;
-      });
-      _mapController.move(latLng, zoom);
-    } catch (e) {
-      debugPrint('Error moving to location: $e');
+    if (_currentPosition != null) {
+      _mapController.move(_currentPosition!, zoom);
     }
   }
 
